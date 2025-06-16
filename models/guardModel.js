@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const guardSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   image: {
     type: String,
     required: [true, 'Guard image is required'],
@@ -47,11 +52,6 @@ const guardSchema = new mongoose.Schema({
       'Rejection reason is required if status is rejected',
     ],
     default: '',
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
   },
 });
 

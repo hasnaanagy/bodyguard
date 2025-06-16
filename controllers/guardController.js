@@ -14,6 +14,7 @@ exports.createGuard = async (req, res) => {
     }
     // Create guard profile
     const guardData = {
+      _id: userId,
       ...req.body,
       status: 'pending',
       user: userId,
@@ -81,7 +82,6 @@ exports.verifyGuard = async (req, res) => {
   }
 };
 
-// PATCH /api/guard/:id - Guard updates their own application
 exports.updateGuard = async (req, res) => {
   try {
     const userId = req.user.id;
