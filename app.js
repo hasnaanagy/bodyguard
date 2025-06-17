@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
-app.use('/api/cars', authRoutes);
+app.use('/api/cars', carRouter);
 
 app.use((err, req, res, next) => {
   console.error('Error Stack:', err.stack);

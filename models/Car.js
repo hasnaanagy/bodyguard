@@ -11,7 +11,7 @@ const carSchema = new mongoose.Schema({
     required: [true, 'Car price is required'],
   },
   model: {
-    type: String,
+    type: Number,
     required: [true, 'Car model is required'],
   },
   type: {

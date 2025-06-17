@@ -4,10 +4,7 @@ const verifyToken = require('../middlewares/verifyToken');
 
 const router = express.Router();
 
-//post ,patch,delete allowed only for admin
-
 router.route('/').get(carController.getAllCars).post(verifyToken, carController.createCar);
-router.get('/:id', carController.getCar);
 
 router
   .route('/:id')
