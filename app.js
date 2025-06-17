@@ -3,11 +3,13 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const authRoute = require('./routes/authRoute');
 const guardRoute = require('./routes/guardRoute');
+const bookingRoute = require('./routes/bookingRoute');
 const app = express();
 app.use(express.json());
 
 app.use('/api/auth', authRoute);
 app.use('/api/guard', guardRoute);
+app.use('/api/bookings', bookingRoute);
 
 app.use((err, req, res, next) => {
   console.error('Error Stack:', err.stack);
