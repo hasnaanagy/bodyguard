@@ -144,3 +144,90 @@ exports.loginUser = async (req, res) => {
     });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const updates = req.body;
+
+    // Fields that cannot be updated
+    const restrictedFields = ['password', 'role', 'email', 'phoneNumber'];
+
+    // Remove restricted fields from updates
+    restrictedFields.forEach((field) => delete updates[field]);
+
+    // Select the appropriate model based on user role
+    let Model;
+    switch (userRole) {
+      case 'client':
+        Model = Client;
+        break;
+      case 'guard':
+        Model = Guard;
+        // Additional validation for guard-specific fields
+        if (updates.identificationNumber) {
+          return res.status(400).json({
+            status: 'fail',
+            message: 'Cannot update identification number or certificates directly',
+          });
+        }
+        break;
+      case 'admin':
+        Model = Admin;
+        break;
+      default:
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Invalid user role',
+        });
+    }
+
+    // Validate location if it's being updated
+    if (updates.location) {
+      if (
+        !updates.location.type ||
+        !updates.location.coordinates ||
+        updates.location.type !== 'Point' ||
+        !Array.isArray(updates.location.coordinates) ||
+        updates.location.coordinates.length !== 2
+      ) {
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Invalid location format',
+        });
+      }
+    }
+
+    // Update the user profile
+    const updatedUser = await Model.findByIdAndUpdate(
+      userId,
+      { $set: updates },
+      {
+        new: true,
+        runValidators: true,
+        select: '-password',
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found',
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
