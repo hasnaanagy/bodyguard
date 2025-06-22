@@ -48,11 +48,11 @@ const guardSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'], // 'Point' for GeoJSON
-      required: true,
+      /* required: true, */
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      required: true,
+      /* required: true, */
     },
   },
   experienceYears: {
@@ -62,7 +62,9 @@ const guardSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-
+  price: {
+    type: Number,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

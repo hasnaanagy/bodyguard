@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: '.env' });
 const app = require('./app');
 const DBAtlas = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
 const DBLocal = process.env.DATABASE_LOCAL;
-mongoose
-  .connect(DBAtlas)
+mongoose.connect(DBAtlas)
   .then(() => {
     console.log('DB connection successful! 🧶 ');
   })
