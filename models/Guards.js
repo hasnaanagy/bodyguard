@@ -32,6 +32,7 @@ const guardSchema = new mongoose.Schema({
   identificationNumber: {
     type: String,
     unique: true,
+    // required: [true, 'Identification number is required'],
   },
   qualification: {
     type: String,
