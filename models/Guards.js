@@ -52,7 +52,7 @@ const guardSchema = new mongoose.Schema({
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      /* required: true, */
+      required: true,
     },
   },
   experienceYears: {
@@ -65,6 +65,18 @@ const guardSchema = new mongoose.Schema({
   price: {
     type: Number,
   },
+  status: {
+    type: String,
+    enum: ['pending', 'aproved', 'rejected'],
+    default: 'pending',
+    required: true,
+  },
+  services: {
+    type: String,
+    enum: ['Escort', 'event insurance', 'VIP insurance'],
+    default: 'Escort',
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

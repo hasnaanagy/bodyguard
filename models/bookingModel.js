@@ -18,11 +18,11 @@ const bookingSchema = new mongoose.Schema(
     },
     startDate: {
       type: Date,
-      //   required: true,
+      required: true,
     },
     endDate: {
       type: Date,
-      //   required: true,
+      required: true,
     },
     price: {
       type: Number,
@@ -32,7 +32,10 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
     },
+
     finalPrice: {
       type: Number,
     },

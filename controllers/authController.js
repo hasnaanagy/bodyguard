@@ -231,3 +231,52 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+exports.uploadProfileFiles = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    let Model;
+    switch (userRole) {
+      case 'client':
+        Model = Client;
+        break;
+      case 'guard':
+        Model = Guard;
+        break;
+      case 'admin':
+        Model = Admin;
+        break;
+      default:
+        return res.status(400).json({ status: 'fail', message: 'Invalid user role' });
+    }
+
+    // Prepare update object
+    const updateData = {};
+    if (req.files && req.files.profilePic && req.files.profilePic[0].googleDriveUrl) {
+      updateData.profileImage = req.files.profilePic[0].googleDriveUrl;
+    }
+    if (req.files && req.files.pdf && req.files.pdf[0].googleDriveUrl) {
+      updateData.criminalHistory = req.files.pdf[0].googleDriveUrl;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ status: 'fail', message: 'No files uploaded' });
+    }
+
+    const updatedUser = await Model.findByIdAndUpdate(userId, { $set: updateData }, { new: true, select: '-password' });
+
+    if (!updatedUser) {
+      return res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Files uploaded and profile updated',
+      data: updatedUser,
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'fail', message: err.message });
+  }
+};
