@@ -42,6 +42,7 @@ const bookingSchema = new mongoose.Schema(
   },
   { toJSON: { virtuals: true }, toObject: { virtuals: true }, timestamps: true }
 );
+bookingSchema.index({ guard: 1, startDate: 1, endDate: 1 });
 
 // ! Virtual properties
 bookingSchema.virtual('duration').get(function () {
