@@ -31,7 +31,7 @@ const guardSchema = new mongoose.Schema({
   },
   identificationNumber: {
     type: String,
-    unique: true,
+    sparse: true, // مهم جداً
   },
   qualification: {
     type: String,
