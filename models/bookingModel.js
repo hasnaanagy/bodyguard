@@ -35,6 +35,7 @@ const bookingSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
+
     finalPrice: {
       type: Number,
     },
