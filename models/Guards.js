@@ -67,7 +67,7 @@ const guardSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'aproved', 'rejected'],
     default: 'pending',
     required: true,
   },
