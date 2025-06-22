@@ -1,5 +1,6 @@
 const express = require('express');
 const AppError = require('./utils/appError');
+const bookingRoutes = require('./routes/bookingRoutes');
 const globalErrorHandler = require('./controllers/errorController');
 const carRouter = require('./routes/carRoute');
 const authRoutes = require('./routes/authRoute');
@@ -21,5 +22,6 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.use('/api/v1/booking', bookingRoutes);
 app.use(globalErrorHandler);
 module.exports = app;

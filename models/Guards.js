@@ -31,8 +31,7 @@ const guardSchema = new mongoose.Schema({
   },
   identificationNumber: {
     type: String,
-    unique: true,
-    // required: [true, 'Identification number is required'],
+    sparse: true, // مهم جداً
   },
   qualification: {
     type: String,
@@ -49,7 +48,7 @@ const guardSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'], // 'Point' for GeoJSON
-      required: true,
+      /* required: true, */
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
@@ -62,6 +61,20 @@ const guardSchema = new mongoose.Schema({
   Certificates: {
     type: [String],
     default: [],
+  },
+  price: {
+    type: Number,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'aproved', 'rejected'],
+    default: 'pending',
+    required: true,
+  },
+  services: {
+    type: String,
+    enum: ['Escort', 'event insurance', 'VIP insurance'],
+    default: 'Escort',
   },
 
   createdAt: {
