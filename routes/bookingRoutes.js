@@ -1,6 +1,6 @@
 const Router = require('express').Router();
-const { getAllBookings } = require('../controllers/bookingController');
+const { getAllBookings, BookGuard } = require('../controllers/bookingController');
 
-Router.route('/').get(getAllBookings);
+Router.route('/').get(getAllBookings).post(BookGuard);
 
 module.exports = Router;

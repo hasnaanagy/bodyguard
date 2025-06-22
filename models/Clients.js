@@ -14,7 +14,7 @@ const clientSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    required: [true, 'Client must have a phone number'],
+    /*  required: [true, 'Client must have a phone number'], */
   },
   password: {
     type: String,
@@ -29,17 +29,15 @@ const clientSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Client must have an age'],
   },
-  location: {
+  /* location: {
     type: {
       type: String,
       enum: ['Point'], // 'Point' for GeoJSON
-      required: true,
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      required: true,
     },
-  },
+  }, */
 });
 
 module.exports = mongoose.model('Client', clientSchema);
