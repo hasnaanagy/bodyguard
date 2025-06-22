@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
 const carSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Car name is required'],
-    trim: true,
-  },
   price: {
     type: Number,
     required: [true, 'Car price is required'],
@@ -21,6 +16,14 @@ const carSchema = new mongoose.Schema({
   color: {
     type: String,
     required: [true, 'Car color is required'],
+  },
+  lisenceImage: {
+    type: String,
+    required: [true, 'Car must have a lisenceImage'],
+  },
+  expiDate: {
+    type: Date,
+    required: [true, 'Car must have an expiration date'],
   },
 });
 
