@@ -33,12 +33,13 @@ const adminSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'], // 'Point' for GeoJSON
-      required: true,
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      required: true,
     },
+  },
+  profileImage: {
+    type: String,
   },
   role: {
     type: String,

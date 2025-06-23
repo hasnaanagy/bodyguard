@@ -29,7 +29,7 @@ const clientSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Client must have an age'],
   },
-  /* location: {
+  location: {
     type: {
       type: String,
       enum: ['Point'], // 'Point' for GeoJSON
@@ -37,7 +37,10 @@ const clientSchema = new mongoose.Schema({
     coordinates: {
       type: [Number], // [longitude, latitude]
     },
-  }, */
+  },
+  profileImage: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('Client', clientSchema);
