@@ -16,7 +16,7 @@ const reviewSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    client: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Client',
       required: [true, 'Review must belong to a user'],
@@ -41,7 +41,9 @@ const reviewSchema = new mongoose.Schema(
 
 // Auto-populate user and guard info
 reviewSchema.pre(/^find/, function (next) {
-  this.populate({ path: 'user', select: 'name profileImage' }).populate({ path: 'guard', select: 'name profileImage' });
+  this.populate({ path: 'user', select: 'name profileImage' })
+    .populate({ path: 'guard', select: 'name profileImage' })
+    .populate({ path: 'booking', select: 'startDate endDate ' });
   next();
 });
 

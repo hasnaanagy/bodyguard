@@ -169,7 +169,7 @@ exports.getProfile = async (req, res) => {
         });
     }
 
-    const user = await Model.findById(userId).select('-password ');
+    const user = await Model.findById(userId).select('-password');
     if (!user) {
       return res.status(404).json({
         status: 'fail',
