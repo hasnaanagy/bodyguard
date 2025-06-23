@@ -1,12 +1,17 @@
 const Booking = require('../models/bookingModel');
-
+const ApiFeatures = require('../utils/apiFeatures');
 exports.getAllBookings = async (req, res) => {
-  try {
-    const allBookings = await Booking.find().populate('guard user vehicle');
-    res.status(200).json(allBookings);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  // ? used for enable nested params form guard to get bookings
+  let getOnly = {};
+  if (req.params.guardId) getOnly.guard = req.params.guardId;
+  const apiFeatures = new ApiFeatures(Booking.find(getOnly), req.query).filter().sort().limitFields().paginate();
+  const reservations = await apiFeatures.query;
+  /* const reservations = await Booking.find(getOnly); */
+  res.status(200).json({
+    status: 'success',
+    results: reservations.length,
+    data: reservations,
+  });
 };
 
 exports.BookGuard = async (req, res) => {

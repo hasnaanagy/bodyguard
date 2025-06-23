@@ -7,9 +7,11 @@ const authRoutes = require('./routes/authRoute');
 const bookingRouter = require('./routes/bookingRoutes');
 const guardRouter = require('./routes/guardRoute');
 const reviewRouter = require('./routes/reviewRoute');
+const morgan = require('morgan');
 
 const app = express();
 app.use(express.json());
+app.use(morgan('dev'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRouter);

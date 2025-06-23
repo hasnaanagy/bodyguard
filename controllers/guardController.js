@@ -43,3 +43,43 @@ exports.getAllGuards = async (req, res) => {
     });
   }
 };
+
+exports.getAllPendingGuards = async (req, res) => {
+  const pendingGuards = await Guard.find({ status: 'pending' });
+  res.status(200).json({
+    status: 'success',
+    data: {
+      pendingGuards,
+    },
+  });
+};
+
+exports.UpdateGuardStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const guard = await Guard.findOneAndUpdate({ _id: id }, { status: status }, { new: true });
+  res.status(200).json({
+    status: 'success',
+    data: {
+      guard,
+    },
+  });
+};
+
+exports.getGuard = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const guard = await Guard.findById(id);
+    if (!guard) {
+      throw new AppError('No guard found with that ID', 404);
+    }
+    res.status(200).json({
+      status: 'success',
+      data: {
+        guard,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
