@@ -145,6 +145,50 @@ exports.loginUser = async (req, res) => {
   }
 };
 
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Select the appropriate model based on user role
+    let Model;
+    switch (userRole) {
+      case 'client':
+        Model = Client;
+        break;
+      case 'guard':
+        Model = Guard;
+        break;
+      case 'admin':
+        Model = Admin;
+        break;
+      default:
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Invalid role specified.',
+        });
+    }
+
+    const user = await Model.findById(userId).select('-password ');
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found.',
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: user,
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -157,6 +201,14 @@ exports.updateProfile = async (req, res) => {
     // Remove restricted fields from updates
     restrictedFields.forEach((field) => delete updates[field]);
 
+    // Handle uploaded files
+    if (req.files && req.files.profilePic && req.files.profilePic[0].googleDriveUrl) {
+      updates.profileImage = req.files.profilePic[0].googleDriveUrl;
+    }
+    if (req.files && req.files.pdf && req.files.pdf[0].googleDriveUrl) {
+      updates.criminalHistory = req.files.pdf[0].googleDriveUrl;
+    }
+
     // Select the appropriate model based on user role
     let Model;
     switch (userRole) {
@@ -165,7 +217,6 @@ exports.updateProfile = async (req, res) => {
         break;
       case 'guard':
         Model = Guard;
-        // Additional validation for guard-specific fields
         if (updates.identificationNumber) {
           return res.status(400).json({
             status: 'fail',
