@@ -1,7 +1,8 @@
 const Router = require('express').Router();
-const { getAllBookings, BookGuard } = require('../controllers/bookingController');
+const bookingController = require('../controllers/bookingController');
 const verifyToken = require('../middlewares/verifyToken');
 
-Router.route('/').get(getAllBookings).post(verifyToken, BookGuard);
+Router.route('/').get(bookingController.getAllBookings).post(verifyToken, bookingController.BookGuard);
+Router.route('/:id').patch(verifyToken, bookingController.updateBooking);
 
 module.exports = Router;

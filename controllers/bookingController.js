@@ -2,7 +2,7 @@ const Booking = require('../models/bookingModel');
 
 exports.getAllBookings = async (req, res) => {
   try {
-    const allBookings = await Booking.find().populate('guard user');
+    const allBookings = await Booking.find().populate('guard user vehicle');
     res.status(200).json(allBookings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -14,7 +14,7 @@ exports.BookGuard = async (req, res) => {
     const clientId = req.user.id;
     const {
       guard,
-      car,
+      vehicle,
       startDate,
       endDate,
       startTime,
@@ -27,7 +27,7 @@ exports.BookGuard = async (req, res) => {
     const booking = await Booking.create({
       guard,
       user: clientId,
-      car,
+      vehicle,
       startDate,
       endDate,
       startTime,
@@ -40,5 +40,41 @@ exports.BookGuard = async (req, res) => {
     res.status(200).json(booking);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateBooking = async (req, res) => {
+  try {
+    const user = req.user;
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ status: 'fail', message: 'Booking not found' });
+    }
+
+    if (!req.body) {
+      return res.status(400).json({ status: 'fail', message: 'No data provided to update' });
+    }
+    if (user.role === 'admin') {
+      Object.assign(booking, req.body);
+    } else if (user.role === 'client' && booking.user.toString() === user.id) {
+      const allowedFields = ['startDate', 'endDate', 'vehicle'];
+      Object.keys(req.body).forEach((key) => {
+        if (allowedFields.includes(key)) {
+          booking[key] = req.body[key];
+        }
+      });
+    } else {
+      return res.status(403).json({ status: 'fail', message: 'Not authorized to update this booking' });
+    }
+    await booking.save();
+    res.status(200).json({
+      status: 'success',
+      data: { booking },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message || err,
+    });
   }
 };

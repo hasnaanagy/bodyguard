@@ -1,25 +1,34 @@
-const mongoose = require('mongoose');
 const Guard = require('../models/Guards');
 const Booking = require('../models/bookingModel');
-const { listenerCount } = require('../models/Clients');
+const APIFeatures = require('../utils/apiFeatures');
 
-exports.getGuards = async (req, res) => {
+exports.getAllGuards = async (req, res) => {
   try {
     let guards;
     const { startDate, endDate } = req.query;
 
     if (startDate && endDate) {
       const bookedGuards = await Booking.find({
-        $or: [{ startDate: { $gte: startDate } }, { endTime: { $lte: endDate } }],
+        $and: [
+          {
+            startDate: { $gte: startDate },
+            endDate: { $lte: endDate },
+          },
+        ],
         status: 'approved',
       }).distinct('guard');
-
-      guards = await Guard.find({
-        _id: { $nin: bookedGuards },
-        status: 'approved',
-      });
+      const execludedFields = ['startDate', 'endDate'];
+      const newQuery = { ...req.query };
+      execludedFields.forEach((el) => delete newQuery[el]);
+      const apiFeatures = new APIFeatures(Guard.find({ _id: { $nin: bookedGuards }, status: 'approved' }), newQuery)
+        .filter()
+        .sort()
+        .limitFields()
+        .paginate();
+      guards = await apiFeatures.query;
     } else {
-      guards = await Guard.find({});
+      const apiFeatures = new APIFeatures(Guard.find(), req.query).filter().sort().limitFields().paginate();
+      guards = await apiFeatures.query;
     }
     res.status(200).json({
       status: 'success',
@@ -30,7 +39,7 @@ exports.getGuards = async (req, res) => {
   } catch (err) {
     res.status(404).json({
       status: 'fail',
-      message: err,
+      message: err.message || err,
     });
   }
 };
