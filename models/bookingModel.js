@@ -49,19 +49,19 @@ bookingSchema.virtual('duration').get(function () {
   return this.endDate - this.startDate;
 });
 
-// ! Query middleware
+// // ! Query middleware
 
-bookingSchema.pre(/^save/, async function (next) {
-  const book = await this.populate('guard user vehicle');
-  console.log('🚀 ~ book:', book);
+// bookingSchema.pre(/^save/, async function (next) {
+//   const book = await this.populate('guard user vehicle');
+//   console.log('🚀 ~ book:', book);
 
-  // checking if user book vehicle
-  if (book.hasOwnProperty('vehicle')) {
-    this.price = book.guard.price + book.vehicle?.price;
-  } else this.price = book.guard.price;
-  this.finalPrice = this.price - this.price * (this.discount / 100);
-  next();
-});
+//   // checking if user book vehicle
+//   if (book.hasOwnProperty('vehicle')) {
+//     this.price = book.guard.price + book.vehicle?.price;
+//   } else this.price = book.guard.price;
+//   this.finalPrice = this.price - this.price * (this.discount / 100);
+//   next();
+// });
 
 // ! Static methods
 

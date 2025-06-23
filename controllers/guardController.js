@@ -4,7 +4,7 @@ const Booking = require('../models/bookingModel');
 
 exports.getAvailableGuards = async (req, res) => {
   try {
-    const { startDate, endDate } = req.body;
+    const { startDate, endDate } = req.query;
     if (!startDate || !endDate) return res.status(400).json({ message: 'Start date and end date are required' });
 
     const bookedGuards = await Booking.find({
