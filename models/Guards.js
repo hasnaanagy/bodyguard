@@ -76,7 +76,12 @@ const guardSchema = new mongoose.Schema({
     enum: ['Escort', 'event insurance', 'VIP insurance'],
     default: 'Escort',
   },
-
+  criminalHistory: {
+    type: String,
+  },
+  profileImage: {
+    type: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
