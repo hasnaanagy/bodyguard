@@ -43,11 +43,6 @@ const bookingSchema = new mongoose.Schema(
   { toJSON: { virtuals: true }, toObject: { virtuals: true }, timestamps: true }
 );
 
-// ! Virtual properties
-bookingSchema.virtual('duration').get(function () {
-  return this.endDate - this.startDate;
-});
-
 const Booking = mongoose.model('Booking', bookingSchema);
 
 module.exports = Booking;

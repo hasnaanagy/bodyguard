@@ -10,7 +10,6 @@ router.post('/login', authController.loginUser);
 router.get('/profile', verifyToken, authController.getProfile);
 // Profile update routes - protected
 router.patch('/profile/update', verifyToken, uploadMultiple, authController.updateProfile);
-
 // Upload profileImage and criminalHistory (protected)
 router.post('/profile/upload-files', verifyToken, uploadMultiple, authController.uploadProfileFiles);
 
