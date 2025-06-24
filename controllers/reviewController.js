@@ -1,12 +1,14 @@
 const Review = require('../models/Review');
 const Booking = require('../models/bookingModel');
 const mongoose = require('mongoose');
+const APIFeaturs = require('../utils/apiFeatures');
 
 // @desc    Get all reviews
 // @route   GET /api/v1/reviews
 exports.getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find();
+    const apiFeatures = new APIFeaturs(Review.find(), req.query).filter().limitFields().paginate().sort();
+    const reviews = await apiFeatures.query;
     res.status(200).json({
       status: 'success',
       results: reviews.length,

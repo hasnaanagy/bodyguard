@@ -1,12 +1,12 @@
-const multer = require("multer");
-const { google } = require("googleapis");
-const fs = require("fs");
-const path = require("path");
+const multer = require('multer');
+const { google } = require('googleapis');
+const fs = require('fs');
+const path = require('path');
 
 // Allowed types
-const allowedImageTypes = ["image/jpeg", "image/png", "image/gif"];
-const allowedVideoTypes = ["video/mp4", "video/mpeg", "video/webm"];
-const allowedDocumentTypes = ["application/pdf"];
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+const allowedVideoTypes = ['video/mp4', 'video/mpeg', 'video/webm'];
+const allowedDocumentTypes = ['application/pdf'];
 
 // File filter
 const fileFilter = (req, file, cb) => {
@@ -19,7 +19,7 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Invalid file type. Only images (JPEG, PNG, GIF), videos (MP4, MPEG, WebM), and PDF files are allowed."
+        'Invalid file type. Only images (JPEG, PNG, GIF), videos (MP4, MPEG, WebM), and PDF files are allowed.'
       ),
       false
     );
@@ -29,7 +29,7 @@ const fileFilter = (req, file, cb) => {
 // Multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "Uploads/");
+    cb(null, 'Uploads/');
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -47,10 +47,10 @@ const upload = multer({
 const uploadToGoogleDrive = async (file) => {
   const auth = new google.auth.GoogleAuth({
     keyFile: process.env.GOOGLE_DRIVE_KEY_PATH,
-    scopes: ["https://www.googleapis.com/auth/drive"],
+    scopes: ['https://www.googleapis.com/auth/drive'],
   });
 
-  const drive = google.drive({ version: "v3", auth });
+  const drive = google.drive({ version: 'v3', auth });
 
   const fileMetadata = {
     name: file.originalname,
@@ -65,7 +65,7 @@ const uploadToGoogleDrive = async (file) => {
   const { data } = await drive.files.create({
     resource: fileMetadata,
     media: media,
-    fields: "id, webViewLink",
+    fields: 'id, webViewLink',
   });
 
   fs.unlinkSync(file.path); // delete local file after upload
@@ -77,51 +77,50 @@ module.exports = {
   upload,
 
   uploadProfilePic: [
-    upload.single("profilePic"),
+    upload.single('profilePic'),
     async (req, res, next) => {
       try {
-        if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
         const googleDriveUrl = await uploadToGoogleDrive(req.file);
         req.file.googleDriveUrl = googleDriveUrl;
 
         next();
       } catch (error) {
-        console.error("Google Drive upload error:", error);
-        res.status(500).json({ message: "Failed to upload to Google Drive", error: error.message });
+        console.error('Google Drive upload error:', error);
+        res.status(500).json({ message: 'Failed to upload to Google Drive', error: error.message });
       }
     },
   ],
 
-  uploadMedia: upload.single("media"),
+  uploadMedia: upload.single('media'),
 
   uploadPdf: [
-    upload.single("pdf"),
+    upload.single('pdf'),
     async (req, res, next) => {
       try {
-        if (!req.file) return res.status(400).json({ message: "No PDF uploaded" });
+        if (!req.file) return res.status(400).json({ message: 'No PDF uploaded' });
 
         const googleDriveUrl = await uploadToGoogleDrive(req.file);
         req.file.googleDriveUrl = googleDriveUrl;
-
         next();
       } catch (error) {
-        console.error("Google Drive upload error:", error);
-        res.status(500).json({ message: "Failed to upload PDF", error: error.message });
+        console.error('Google Drive upload error:', error);
+        res.status(500).json({ message: 'Failed to upload PDF', error: error.message });
       }
     },
   ],
 
   uploadMultiple: [
     upload.fields([
-      { name: "profilePic", maxCount: 1 },
-      { name: "media", maxCount: 1 },
-      { name: "pdf", maxCount: 1 },
+      { name: 'profilePic', maxCount: 1 },
+      { name: 'media', maxCount: 1 },
+      { name: 'pdf', maxCount: 1 },
     ]),
     async (req, res, next) => {
       try {
         if (!req.files || (!req.files.profilePic && !req.files.media && !req.files.pdf)) {
-          return res.status(400).json({ message: "No files uploaded" });
+          return next();
         }
 
         if (req.files.profilePic) {
@@ -141,8 +140,8 @@ module.exports = {
 
         next();
       } catch (error) {
-        console.error("Google Drive upload error:", error);
-        res.status(500).json({ message: "Error uploading to Google Drive", error: error.message });
+        console.error('Google Drive upload error:', error);
+        res.status(500).json({ message: 'Error uploading to Google Drive', error: error.message });
       }
     },
   ],
