@@ -48,6 +48,7 @@ const userSchema = new mongoose.Schema(
     profileImage: {
       type: String,
     },
+    passwordChangedAt: Date,
   },
   options
 );
@@ -108,6 +109,16 @@ const adminSchema = new mongoose.Schema(
 // Client-specific fields (add more if needed)
 const clientSchema = new mongoose.Schema({}, options);
 
+// ! Instance method to check if password was changed after JWT was issued
+userSchema.methods.checkPasswordChangedAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+
+    return JWTTimestamp < changedTimestamp; // if true, password was changed after token was issued
+  }
+  //  false means not changed
+  return false;
+};
 // Create discriminators
 const Guard = User.discriminator('guard', guardSchema);
 const Admin = User.discriminator('admin', adminSchema);

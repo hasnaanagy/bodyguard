@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // Register User (with discriminator)
 exports.registerUser = async (req, res) => {
   try {
-    const { role, password, email, phoneNumber, ...restData } = req.body;
+    const { role, password, email, phoneNumber, name, country, age, location } = req.body;
 
     // Check if email or phone already exists
     const emailExists = await User.findOne({ email });
@@ -27,11 +27,14 @@ exports.registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Prepare user data
-    const userData = {
-      ...restData,
-      email,
+    let userData = {
+      name,
       phoneNumber,
       password: hashedPassword,
+      country,
+      email,
+      age,
+      location,
       role,
     };
 
@@ -41,10 +44,21 @@ exports.registerUser = async (req, res) => {
         newUser = await Client.create(userData);
         break;
       case 'guard':
-        newUser = await Guard.create(userData);
+        newUser = await Guard.create({
+          ...userData,
+          identificationNumber: req.body.identificationNumber,
+          qualification: req.body.qualification,
+          hobbies: req.body.hobbies,
+          languages: req.body.languages,
+          experienceYears: req.body.experienceYears,
+          Certificates: req.body.Certificates,
+          price: req.body.price,
+          services: req.body.services,
+          criminalHistory: req.body.criminalHistory,
+        });
         break;
       case 'admin':
-        newUser = await Admin.create(userData);
+        newUser = await Admin.create({ ...userData });
         break;
       default:
         return res.status(400).json({
@@ -194,7 +208,7 @@ exports.uploadProfileFiles = async (req, res) => {
     if (req.files && req.files.pdf && req.files.pdf[0].googleDriveUrl) {
       if (userRole === 'guard') {
         // For guards, optionally check if criminalHistory already exists
-        const user = await Admin.findById(userId);
+        const user = await Guard.findById(userId);
         if (!user.criminalHistory) {
           return res.status(400).json({
             status: 'fail',
@@ -210,9 +224,9 @@ exports.uploadProfileFiles = async (req, res) => {
       }
     }
 
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({ status: 'fail', message: 'No data provided to update' });
-    }
+    // if (!req.body || Object.keys(req.body).length === 0) {
+    //   return res.status(400).json({ status: 'fail', message: 'No data provided to update' });
+    // }
 
     const updatedUser = await Model.findByIdAndUpdate(userId, { $set: updateData }, { new: true, select: '-password' });
 
