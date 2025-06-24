@@ -1,35 +1,22 @@
-const Client = require('../models/Clients');
-const Guard = require('../models/Guards');
-const Admin = require('../models/Admin');
+const { User, Guard, Admin, Client } = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Register User (with discriminator)
 exports.registerUser = async (req, res) => {
   try {
-    const { role, password, email, phoneNumber, ...restData } = req.body;
+    const { role, password, email, phoneNumber, name, country, age, location } = req.body;
 
-    // Check email existence across all collections
-    const emailExists = await Promise.all([
-      Client.findOne({ email }),
-      Guard.findOne({ email }),
-      Admin.findOne({ email }),
-    ]);
-
-    if (emailExists.some((user) => user !== null)) {
+    // Check if email or phone already exists
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
       return res.status(400).json({
         status: 'fail',
         message: 'Email is already registered',
       });
     }
-
-    // Check phone number existence across all collections
-    const phoneExists = await Promise.all([
-      Client.findOne({ phoneNumber }),
-      Guard.findOne({ phoneNumber }),
-      Admin.findOne({ phoneNumber }),
-    ]);
-
-    if (phoneExists.some((user) => user !== null)) {
+    const phoneExists = await User.findOne({ phoneNumber });
+    if (phoneExists) {
       return res.status(400).json({
         status: 'fail',
         message: 'Phone number is already registered',
@@ -39,26 +26,39 @@ exports.registerUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Prepare user data with hashed password
-    const userData = {
-      ...restData,
-      email,
+    // Prepare user data
+    let userData = {
+      name,
       phoneNumber,
       password: hashedPassword,
+      country,
+      email,
+      age,
+      location,
+      role,
     };
 
     let newUser;
-
-    // Choose model based on role
     switch (role) {
       case 'client':
         newUser = await Client.create(userData);
         break;
       case 'guard':
-        newUser = await Guard.create(userData);
+        newUser = await Guard.create({
+          ...userData,
+          identificationNumber: req.body.identificationNumber,
+          qualification: req.body.qualification,
+          hobbies: req.body.hobbies,
+          languages: req.body.languages,
+          experienceYears: req.body.experienceYears,
+          Certificates: req.body.Certificates,
+          price: req.body.price,
+          services: req.body.services,
+          criminalHistory: req.body.criminalHistory,
+        });
         break;
       case 'admin':
-        newUser = await Admin.create(userData);
+        newUser = await Admin.create({ ...userData });
         break;
       default:
         return res.status(400).json({
@@ -84,6 +84,7 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+// Login User (with discriminator)
 exports.loginUser = async (req, res) => {
   try {
     const { emailOrPhone, password } = req.body;
@@ -92,12 +93,8 @@ exports.loginUser = async (req, res) => {
     const isEmail = emailOrPhone.includes('@');
     const searchQuery = isEmail ? { email: emailOrPhone } : { phoneNumber: emailOrPhone };
 
-    // Search in all collections
-    const user = await Promise.all([
-      Client.findOne(searchQuery),
-      Guard.findOne(searchQuery),
-      Admin.findOne(searchQuery),
-    ]).then((results) => results.find((user) => user !== null));
+    // Find user in User collection
+    const user = await User.findOne(searchQuery);
 
     if (!user) {
       return res.status(401).json({
@@ -115,14 +112,8 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // Determine user role based on collection
-    let role;
-    if (user instanceof Client) role = 'client';
-    else if (user instanceof Guard) role = 'guard';
-    else if (user instanceof Admin) role = 'admin';
-
     // Generate JWT token
-    const token = jwt.sign({ id: user._id, role }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
     // Remove sensitive data from response
     const userResponse = user.toObject();
@@ -134,7 +125,7 @@ exports.loginUser = async (req, res) => {
       token,
       data: {
         user: userResponse,
-        role,
+        role: user.role,
       },
     });
   } catch (err) {
@@ -189,100 +180,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const userRole = req.user.role;
-    const updates = req.body;
-
-    // Fields that cannot be updated
-    const restrictedFields = ['password', 'role', 'email', 'phoneNumber'];
-
-    // Remove restricted fields from updates
-    restrictedFields.forEach((field) => delete updates[field]);
-
-    // Handle uploaded files
-    if (req.files && req.files.profilePic && req.files.profilePic[0].googleDriveUrl) {
-      updates.profileImage = req.files.profilePic[0].googleDriveUrl;
-    }
-    if (req.files && req.files.pdf && req.files.pdf[0].googleDriveUrl) {
-      updates.criminalHistory = req.files.pdf[0].googleDriveUrl;
-    }
-
-    // Select the appropriate model based on user role
-    let Model;
-    switch (userRole) {
-      case 'client':
-        Model = Client;
-        break;
-      case 'guard':
-        Model = Guard;
-        if (updates.identificationNumber) {
-          return res.status(400).json({
-            status: 'fail',
-            message: 'Cannot update identification number or certificates directly',
-          });
-        }
-        break;
-      case 'admin':
-        Model = Admin;
-        break;
-      default:
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Invalid user role',
-        });
-    }
-
-    // Validate location if it's being updated
-    if (updates.location) {
-      if (
-        !updates.location.type ||
-        !updates.location.coordinates ||
-        updates.location.type !== 'Point' ||
-        !Array.isArray(updates.location.coordinates) ||
-        updates.location.coordinates.length !== 2
-      ) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Invalid location format',
-        });
-      }
-    }
-
-    // Update the user profile
-    const updatedUser = await Model.findByIdAndUpdate(
-      userId,
-      { $set: updates },
-      {
-        new: true,
-        runValidators: true,
-        select: '-password',
-      }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'User not found',
-      });
-    }
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Profile updated successfully',
-      data: {
-        user: updatedUser,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'fail',
-      message: err.message,
-    });
-  }
-};
-
 exports.uploadProfileFiles = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -309,12 +206,27 @@ exports.uploadProfileFiles = async (req, res) => {
       updateData.profileImage = req.files.profilePic[0].googleDriveUrl;
     }
     if (req.files && req.files.pdf && req.files.pdf[0].googleDriveUrl) {
-      updateData.criminalHistory = req.files.pdf[0].googleDriveUrl;
+      if (userRole === 'guard') {
+        // For guards, optionally check if criminalHistory already exists
+        const user = await Guard.findById(userId);
+        if (!user.criminalHistory) {
+          return res.status(400).json({
+            status: 'fail',
+            message: 'You must have an existing criminalHistory before uploading a new one.',
+          });
+        }
+        updateData.criminalHistory = req.files.pdf[0].googleDriveUrl;
+      } else {
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Only guards can upload criminal history PDF.',
+        });
+      }
     }
 
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ status: 'fail', message: 'No files uploaded' });
-    }
+    // if (!req.body || Object.keys(req.body).length === 0) {
+    //   return res.status(400).json({ status: 'fail', message: 'No data provided to update' });
+    // }
 
     const updatedUser = await Model.findByIdAndUpdate(userId, { $set: updateData }, { new: true, select: '-password' });
 
@@ -326,6 +238,89 @@ exports.uploadProfileFiles = async (req, res) => {
       status: 'success',
       message: 'Files uploaded and profile updated',
       data: updatedUser,
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'fail', message: err.message });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const updates = req.body;
+
+    // // امنع تعديل بيانات حساسة
+    // const restrictedFields = ['password', 'role', 'email', 'phoneNumber'];
+    // restrictedFields.forEach((field) => delete updates[field]);
+
+    // تحديد الموديل حسب الدور
+    let Model;
+    if (userRole === 'guard') Model = Guard;
+    else if (userRole === 'admin') Model = Admin;
+    else if (userRole === 'client') Model = Client;
+    else return res.status(400).json({ status: 'fail', message: 'Invalid role' });
+
+    // رفع الصور والملفات
+    if (req.files?.profilePic?.[0]?.googleDriveUrl) {
+      updates.profileImage = req.files.profilePic[0].googleDriveUrl;
+    }
+
+    if (req.files?.pdf?.[0]?.googleDriveUrl) {
+      if (userRole === 'guard') {
+        updates.criminalHistory = req.files.pdf[0].googleDriveUrl;
+      } else {
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Only guards can upload criminal history PDF.',
+        });
+      }
+    }
+
+    // تحقق من صيغة الموقع الجغرافي (لو موجود)
+    if (updates.location) {
+      const loc = updates.location;
+      if (!loc.type || loc.type !== 'Point' || !Array.isArray(loc.coordinates) || loc.coordinates.length !== 2) {
+        return res.status(400).json({ status: 'fail', message: 'Invalid location format' });
+      }
+    }
+
+    // ممنوع تعديل بيانات حساسة للحراس
+    if (userRole === 'guard' && (updates.identificationNumber || updates.Certificates)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Cannot update identification number or certificates directly',
+      });
+    }
+
+    // تحقق من وجود بيانات للتحديث
+    const hasFile = req.files?.profilePic || req.files?.pdf;
+    if (!Object.keys(updates).length && !hasFile) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'No data provided to update',
+      });
+    }
+
+    // تحديث المستخدم
+    const updatedUser = await Model.findByIdAndUpdate(
+      userId,
+      { $set: updates },
+      {
+        new: true,
+        runValidators: true,
+        select: '-password',
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ status: 'fail', message: 'User not found' });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      data: { user: updatedUser },
     });
   } catch (err) {
     res.status(500).json({ status: 'fail', message: err.message });
