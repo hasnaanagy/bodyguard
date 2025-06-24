@@ -1,4 +1,4 @@
-const Guard = require('../models/Guards');
+const { Guard } = require('../models/User');
 const Booking = require('../models/bookingModel');
 const APIFeatures = require('../utils/apiFeatures');
 

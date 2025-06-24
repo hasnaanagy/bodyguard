@@ -1,4 +1,5 @@
 const Router = require('express').Router();
+const express = require('express');
 const bookingController = require('../controllers/bookingController');
 const verifyToken = require('../middlewares/verifyToken');
 const router = express.Router({ mergeParams: true });
