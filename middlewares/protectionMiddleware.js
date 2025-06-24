@@ -7,7 +7,7 @@ module.exports = async (req, res, next) => {
   //  1) Check if token is provided in the headers
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1]; // Extract the token from the header
-  } else if (req.cookies.jwt) {
+  } else if (req.cookies?.jwt) {
     token = req.cookies.jwt;
   } else {
     return next(new AppError('You are not logged in ! Please log in to get access.', 401));

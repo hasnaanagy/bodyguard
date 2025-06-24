@@ -89,13 +89,6 @@ const guardSchema = new mongoose.Schema(
 // Admin-specific fields (example: role)
 const adminSchema = new mongoose.Schema(
   {
-    permissions: [
-      {
-        resource: { type: String }, // مثلاً: 'bookings', 'guards'
-        actions: [{ type: String }], // مثلاً: ['read', 'create', 'update', 'delete']
-      },
-    ],
-
     lastLogin: Date,
   },
   options
@@ -104,8 +97,18 @@ const moderatorSchema = new mongoose.Schema(
   {
     permissions: [
       {
-        resource: { type: String }, // مثلاً: 'bookings', 'guards'
-        actions: [{ type: String }], // مثلاً: ['read', 'create', 'update', 'delete']
+        resource: {
+          type: String,
+          enum: ['bookings', 'reviews', 'cars', 'services'],
+          required: true,
+        },
+        actions: [
+          {
+            type: String,
+            enum: ['read', 'write', 'edit', 'delete'],
+            required: true,
+          },
+        ],
       },
     ],
 
