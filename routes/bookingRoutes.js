@@ -1,10 +1,13 @@
 const Router = require('express').Router();
 const express = require('express');
 const bookingController = require('../controllers/bookingController');
-const verifyToken = require('../middlewares/verifyToken');
+const protection = require('../middlewares/protectionMiddleware');
+const restriction = require('../middlewares/restrictionMiddleware');
 const router = express.Router({ mergeParams: true });
 
-Router.route('/').get(bookingController.getAllBookings).post(verifyToken, bookingController.BookGuard);
-Router.route('/:id').patch(verifyToken, bookingController.updateBooking);
+Router.route('/')
+  .get(protection, bookingController.getAllBookings)
+  .post(protection, restriction('admin', 'moderator', 'client'), bookingController.BookGuard);
+Router.route('/:id').patch(protection, restriction('admin', 'moderator', 'client'), bookingController.updateBooking);
 
 module.exports = Router;

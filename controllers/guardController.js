@@ -17,6 +17,8 @@ exports.getAllGuards = async (req, res) => {
         ],
         status: 'approved',
       }).distinct('guard');
+
+      //remove start and end date from req.query before filter because it is not in the car schema
       const execludedFields = ['startDate', 'endDate'];
       const newQuery = { ...req.query };
       execludedFields.forEach((el) => delete newQuery[el]);
