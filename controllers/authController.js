@@ -1,4 +1,4 @@
-const { User, Guard, Admin, Client } = require('../models/User');
+const { User, Guard, Admin, Client, Moderator } = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -59,6 +59,9 @@ exports.registerUser = async (req, res) => {
         break;
       case 'admin':
         newUser = await Admin.create({ ...userData });
+        break;
+      case 'moderator':
+        newUser = await Moderator.create({ ...userData });
         break;
       default:
         return res.status(400).json({
@@ -153,6 +156,9 @@ exports.getProfile = async (req, res) => {
       case 'admin':
         Model = Admin;
         break;
+      case 'moderator':
+        Model = Moderator;
+        break;
       default:
         return res.status(400).json({
           status: 'fail',
@@ -195,6 +201,9 @@ exports.uploadProfileFiles = async (req, res) => {
         break;
       case 'admin':
         Model = Admin;
+        break;
+      case 'moderator':
+        Model = Moderator;
         break;
       default:
         return res.status(400).json({ status: 'fail', message: 'Invalid user role' });
@@ -259,6 +268,7 @@ exports.updateProfile = async (req, res) => {
     if (userRole === 'guard') Model = Guard;
     else if (userRole === 'admin') Model = Admin;
     else if (userRole === 'client') Model = Client;
+    else if (userRole === 'moderator') Model = Moderator;
     else return res.status(400).json({ status: 'fail', message: 'Invalid role' });
 
     // رفع الصور والملفات

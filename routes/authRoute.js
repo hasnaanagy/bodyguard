@@ -3,6 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const verifyToken = require('../middlewares/verifyToken');
 const protection = require('../middlewares/protectionMiddleware');
+const restriction = require('../middlewares/restrictionMiddleware');
 const { uploadMultiple } = require('../middlewares/upload');
 
 // Auth routes

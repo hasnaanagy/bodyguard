@@ -97,11 +97,19 @@ const adminSchema = new mongoose.Schema(
     ],
 
     lastLogin: Date,
-    // role: {
-    //   type: String,
-    //   enum: ['admin', 'superadmin'],
-    //   default: 'admin',
-    // },
+  },
+  options
+);
+const moderatorSchema = new mongoose.Schema(
+  {
+    permissions: [
+      {
+        resource: { type: String }, // مثلاً: 'bookings', 'guards'
+        actions: [{ type: String }], // مثلاً: ['read', 'create', 'update', 'delete']
+      },
+    ],
+
+    lastLogin: Date,
   },
   options
 );
@@ -123,5 +131,6 @@ userSchema.methods.checkPasswordChangedAfter = function (JWTTimestamp) {
 const Guard = User.discriminator('guard', guardSchema);
 const Admin = User.discriminator('admin', adminSchema);
 const Client = User.discriminator('client', clientSchema);
+const Moderator = User.discriminator('moderator', moderatorSchema);
 
-module.exports = { User, Guard, Admin, Client };
+module.exports = { User, Guard, Admin, Client, Moderator };
