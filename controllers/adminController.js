@@ -105,14 +105,14 @@ exports.assignPermissions = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    // update permissions for existing moderator
+    // update permissions for moderator
     if (user.role === 'moderator') {
       const moderator = await Moderator.findById(id);
       moderator.permissions = mergePermissions(moderator.permissions, permissions);
       await moderator.save();
       return res.status(200).json({ message: 'Permissions updated', user: moderator });
     }
-    return res.status(400).json({ message: 'Only clients or moderators are supported' });
+    return res.status(400).json({ message: 'moderators are supported' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
