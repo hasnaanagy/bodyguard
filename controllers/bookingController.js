@@ -1,4 +1,4 @@
-const Booking = require('../models/bookingModel');
+const Booking = require('../models/Booking');
 const ApiFeatures = require('../utils/apiFeatures');
 exports.getAllBookings = async (req, res) => {
   // ? used for enable nested params form guard to get bookings
@@ -53,11 +53,11 @@ exports.updateBooking = async (req, res) => {
     const user = req.user;
     const booking = await Booking.findById(req.params.id);
     if (!booking) {
-      return res.status(404).json({ status: 'fail', message: 'Booking not found' });
+      throw new AppError('Booking not found', 404);
     }
 
     if (!req.body) {
-      return res.status(400).json({ status: 'fail', message: 'No data provided to update' });
+      throw new AppError('No data provided to update', 400);
     }
     if (user.role === 'admin') {
       Object.assign(booking, req.body);
@@ -69,7 +69,7 @@ exports.updateBooking = async (req, res) => {
         }
       });
     } else {
-      return res.status(403).json({ status: 'fail', message: 'Not authorized to update this booking' });
+      throw new AppError('Not authorized to update this booking', 403);
     }
     await booking.save();
     res.status(200).json({
@@ -77,9 +77,6 @@ exports.updateBooking = async (req, res) => {
       data: { booking },
     });
   } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message || err,
-    });
+    next(err);
   }
 };

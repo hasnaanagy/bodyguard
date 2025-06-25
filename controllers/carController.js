@@ -1,5 +1,5 @@
 const Car = require('../models/Car');
-const Booking = require('../models/bookingModel');
+const Booking = require('../models/Booking');
 const APIFeatures = require('../utils/apiFeatures');
 
 exports.getAllCars = async (req, res) => {
@@ -16,7 +16,6 @@ exports.getAllCars = async (req, res) => {
         ],
         status: 'approved',
       }).distinct('vehicle');
-      console.log('booked cars', bookedCars);
 
       //remove start and end date from req.query before filter because it is not in the car schema
       const execludedFields = ['startDate', 'endDate'];
@@ -39,7 +38,7 @@ exports.getAllCars = async (req, res) => {
       data: { cars },
     });
   } catch (err) {
-    res.status(404).json({ status: 'fail', message: err });
+    next(err);
   }
 };
 
@@ -51,14 +50,14 @@ exports.getCar = async (req, res) => {
       data: { car },
     });
   } catch (err) {
-    res.status(404).json({ status: 'fail', message: err });
+    next(err);
   }
 };
 
 exports.createCar = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ status: 'fail', message: 'Only admin can create a car' });
+      throw new AppError(' Only admin can create a car', 403);
     }
     const newCar = await Car.create(req.body);
     res.status(201).json({
@@ -66,14 +65,14 @@ exports.createCar = async (req, res) => {
       data: { car: newCar },
     });
   } catch (err) {
-    res.status(400).json({ status: 'fail', message: err });
+    next(err);
   }
 };
 
 exports.updateCar = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ status: 'fail', message: 'Only admin can update a car' });
+      throw new AppError(' Only admin can update a car', 403);
     }
     const car = await Car.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -84,18 +83,18 @@ exports.updateCar = async (req, res) => {
       data: { car },
     });
   } catch (err) {
-    res.status(404).json({ status: 'fail', message: err });
+    next(err);
   }
 };
 
 exports.deleteCar = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ status: 'fail', message: 'Only admin can delete a car' });
+      throw new AppError(' Only admin can delete a car', 403);
     }
     await Car.findByIdAndDelete(req.params.id);
     res.status(204).json({ status: 'success', data: null });
   } catch (err) {
-    res.status(404).json({ status: 'fail', message: err });
+    next(err);
   }
 };

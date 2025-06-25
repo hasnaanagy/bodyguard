@@ -1,5 +1,5 @@
 const { Guard } = require('../models/User');
-const Booking = require('../models/bookingModel');
+const Booking = require('../models/Booking');
 const APIFeatures = require('../utils/apiFeatures');
 
 exports.getAllGuards = async (req, res) => {
@@ -39,21 +39,8 @@ exports.getAllGuards = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err.message || err,
-    });
+    next(err);
   }
-};
-
-exports.getAllPendingGuards = async (req, res) => {
-  const pendingGuards = await Guard.find({ status: 'pending' });
-  res.status(200).json({
-    status: 'success',
-    data: {
-      pendingGuards,
-    },
-  });
 };
 
 exports.UpdateGuardStatus = async (req, res) => {

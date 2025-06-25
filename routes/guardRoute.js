@@ -8,7 +8,6 @@ router.use('/:guardId/bookings', bookingRoutes);
 
 router.route('/').get(protection, guardController.getAllGuards);
 
-router.route('/pending').get(guardController.getAllPendingGuards);
 router.route('/:id').get(guardController.getGuard).patch(guardController.UpdateGuardStatus);
 
 module.exports = router;
