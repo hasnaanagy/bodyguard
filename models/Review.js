@@ -18,12 +18,12 @@ const reviewSchema = new mongoose.Schema(
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Client',
+      ref: 'User',
       required: [true, 'Review must belong to a user'],
     },
     guard: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Guard',
+      ref: 'User',
       required: [true, 'Review must belong to a guard'],
     },
     booking: {
