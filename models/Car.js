@@ -19,11 +19,11 @@ const carSchema = new mongoose.Schema({
   },
   lisenceImage: {
     type: String,
-    required: [true, 'Car must have a lisenceImage'],
+    // required: [true, 'Car must have a lisenceImage'],
   },
   expiDate: {
     type: Date,
-    required: [true, 'Car must have an expiration date'],
+    // required: [true, 'Car must have an expiration date'],
   },
 });
 
