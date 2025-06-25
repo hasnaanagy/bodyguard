@@ -1,6 +1,6 @@
 const { Guard } = require('../models/User');
 const Review = require('../models/Review');
-const Booking = require('../models/bookingModel');
+const Booking = require('../models/Booking');
 const mongoose = require('mongoose');
 const APIFeaturs = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');

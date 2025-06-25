@@ -98,12 +98,12 @@ exports.assignPermissions = async (req, res) => {
     const { permissions } = req.body;
     // validate permissions
     if (!validatePermissions(permissions)) {
-      return res.status(400).json({ message: 'Invalid permissions format' });
+      throw new AppError('Invalid permissions format', 400);
     }
     // check if user exists
     let user = await User.findById(id);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      throw new AppError('User not found', 404);
     }
     // update permissions for moderator
     if (user.role === 'moderator') {
@@ -112,8 +112,8 @@ exports.assignPermissions = async (req, res) => {
       await moderator.save();
       return res.status(200).json({ message: 'Permissions updated', user: moderator });
     }
-    return res.status(400).json({ message: 'moderators are supported' });
+    throw new AppError('only moderators are supported', 400);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    next(err);
   }
 };
