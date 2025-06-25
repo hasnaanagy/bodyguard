@@ -1,20 +1,59 @@
 const Booking = require('../models/Booking');
 const ApiFeatures = require('../utils/apiFeatures');
-exports.getAllBookings = async (req, res) => {
-  // ? used for enable nested params form guard to get bookings
-  let getOnly = {};
-  if (req.params.guardId) getOnly.guard = req.params.guardId;
-  const apiFeatures = new ApiFeatures(Booking.find(getOnly), req.query).filter().sort().limitFields().paginate();
-  const reservations = await apiFeatures.query;
-  /* const reservations = await Booking.find(getOnly); */
-  res.status(200).json({
-    status: 'success',
-    results: reservations.length,
-    data: reservations,
-  });
+const AppError = require('../utils/appError');
+
+exports.getAllBookings = async (req, res, next) => {
+  try {
+    // ? used for enable nested params form guard to get bookings
+    let getOnly = {};
+    if (req.params.guardId) getOnly.guard = req.params.guardId;
+    const apiFeatures = new ApiFeatures(Booking.find(getOnly), req.query).filter().sort().limitFields().paginate();
+    const reservations = await apiFeatures.query;
+    /* const reservations = await Booking.find(getOnly); */
+    res.status(200).json({
+      status: 'success',
+      results: reservations.length,
+      data: reservations,
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
-exports.BookGuard = async (req, res) => {
+exports.getBookingById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        booking,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getBookingByUserId = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const bookings = await Booking.find({
+      $or: [{ guard: id }, { user: id }],
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        bookings,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.BookGuard = async (req, res, next) => {
   try {
     const clientId = req.user.id;
     const {
@@ -43,12 +82,12 @@ exports.BookGuard = async (req, res) => {
       status,
     });
     res.status(200).json(booking);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.updateBooking = async (req, res) => {
+exports.updateBooking = async (req, res, next) => {
   try {
     const user = req.user;
     const booking = await Booking.findById(req.params.id);
@@ -75,6 +114,19 @@ exports.updateBooking = async (req, res) => {
     res.status(200).json({
       status: 'success',
       data: { booking },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await Booking.findByIdAndDelete(id);
+    res.status(200).json({
+      status: 'success',
+      message: 'deleted successfully',
     });
   } catch (err) {
     next(err);

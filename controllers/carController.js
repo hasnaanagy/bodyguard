@@ -1,8 +1,8 @@
 const Car = require('../models/Car');
 const Booking = require('../models/Booking');
 const APIFeatures = require('../utils/apiFeatures');
-
-exports.getAllCars = async (req, res) => {
+const AppError = require('../utils/appError');
+exports.getAllCars = async (req, res, next) => {
   try {
     let cars;
     const { startDate, endDate } = req.query;
@@ -42,7 +42,7 @@ exports.getAllCars = async (req, res) => {
   }
 };
 
-exports.getCar = async (req, res) => {
+exports.getCar = async (req, res, next) => {
   try {
     const car = await Car.findById(req.params.id);
     res.status(200).json({
@@ -54,11 +54,8 @@ exports.getCar = async (req, res) => {
   }
 };
 
-exports.createCar = async (req, res) => {
+exports.createCar = async (req, res, next) => {
   try {
-    if (req.user.role !== 'admin') {
-      throw new AppError(' Only admin can create a car', 403);
-    }
     const newCar = await Car.create(req.body);
     res.status(201).json({
       status: 'success',
@@ -69,7 +66,7 @@ exports.createCar = async (req, res) => {
   }
 };
 
-exports.updateCar = async (req, res) => {
+exports.updateCar = async (req, res, next) => {
   try {
     if (req.user.role !== 'admin') {
       throw new AppError(' Only admin can update a car', 403);
@@ -87,7 +84,7 @@ exports.updateCar = async (req, res) => {
   }
 };
 
-exports.deleteCar = async (req, res) => {
+exports.deleteCar = async (req, res, next) => {
   try {
     if (req.user.role !== 'admin') {
       throw new AppError(' Only admin can delete a car', 403);
