@@ -117,3 +117,29 @@ exports.assignPermissions = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.revokePermission = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { permissions } = req.body;
+    const moderator = await Moderator.findById(id);
+    console.log(moderator.permissions);
+
+    // Loop through permissions to remove
+    for (const rev of permissions) {
+      const existing = moderator.permissions.find((p) => p.resource === rev.resource);
+      if (existing) {
+        existing.actions = existing.actions.filter((action) => !rev.actions.includes(action));
+
+        if (existing.actions.length === 0) {
+          moderator.permissions = moderator.permissions.filter((p) => p.resource !== rev.resource);
+        }
+      }
+    }
+
+    await moderator.save();
+    return res.status(200).json({ status: 'success', user: moderator });
+  } catch (err) {
+    next(err);
+  }
+};
