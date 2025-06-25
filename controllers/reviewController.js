@@ -1,13 +1,19 @@
+const { Guard } = require('../models/User');
 const Review = require('../models/Review');
 const Booking = require('../models/bookingModel');
 const mongoose = require('mongoose');
 const APIFeaturs = require('../utils/apiFeatures');
+const AppError = require('../utils/appError');
 
 // @desc    Get all reviews
 // @route   GET /api/v1/reviews
-exports.getAllReviews = async (req, res) => {
+exports.getAllReviews = async (req, res, next) => {
   try {
-    const apiFeatures = new APIFeaturs(Review.find(), req.query).filter().limitFields().paginate().sort();
+    const apiFeatures = new APIFeaturs(Review.find().populate('user', 'name').populate('guard', 'name'), req.query)
+      .filter()
+      .limitFields()
+      .paginate()
+      .sort();
     const reviews = await apiFeatures.query;
     res.status(200).json({
       status: 'success',
@@ -15,16 +21,19 @@ exports.getAllReviews = async (req, res) => {
       data: { reviews },
     });
   } catch (err) {
-    res.status(400).json({ status: 'fail', message: err.message });
+    next(err);
   }
 };
 
 // @desc    Get reviews for a specific guard
 // @route   GET /api/v1/reviews/guard/:guardId
-exports.getReviewsByGuard = async (req, res) => {
+exports.getReviewsByGuard = async (req, res, next) => {
   try {
     const guardId = req.params.guardId;
 
+    // Check if guard exists
+    const guard = await Guard.findById(guardId);
+    if (!guard) throw new AppError('Guard not found', 404);
     // جلب التقييمات للحارس
     const reviews = await Review.find({ guard: guardId });
 
@@ -49,25 +58,26 @@ exports.getReviewsByGuard = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(400).json({ status: 'fail', message: err.message });
+    next(err);
   }
 };
 
 // @desc    Create review after booking
 // @route   POST /api/v1/reviews
-exports.createReview = async (req, res) => {
+exports.createReview = async (req, res, next) => {
   try {
     const bookingId = req.params.id;
     const { rating, review } = req.body;
+    console.log('Current User:', req.user);
 
     // Check booking exists and belongs to user
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw new Error('Booking not found');
-    if (booking.user.toString() !== req.user.id) throw new Error('You are not allowed to review this booking');
+    if (!booking) throw new AppError('Booking not found', 404);
+    if (booking.user.toString() !== req.user.id) throw new AppError('You are not allowed to review this booking', 403);
 
     // Check if booking is completed
     const now = new Date();
-    if (booking.endDate > now) throw new Error('You can only review after booking has ended');
+    if (booking.endDate > now) throw new AppError('You can only review after booking has ended', 400);
 
     // Create review
     const newReview = await Review.create({
@@ -83,6 +93,6 @@ exports.createReview = async (req, res) => {
       data: { review: newReview },
     });
   } catch (err) {
-    res.status(400).json({ status: 'fail', message: err.message });
+    next(err);
   }
 };
