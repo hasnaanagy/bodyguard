@@ -12,10 +12,18 @@ Router.route('/')
     restriction(['admin', 'moderator', 'client'], { resource: 'bookings', action: 'write' }),
     bookingController.BookGuard
   );
-Router.route('/:id').patch(
-  protection,
-  restriction(['admin', 'moderator', 'client'], { resource: 'bookings', action: 'edit' }),
-  bookingController.updateBooking
-);
+Router.route('/:id')
+  .get(protection, bookingController.getBookingById)
+  .patch(
+    protection,
+    restriction(['admin', 'moderator', 'client'], { resource: 'bookings', action: 'edit' }),
+    bookingController.updateBooking
+  )
+  .delete(
+    protection,
+    restriction(['admin', 'moderator'], { resource: 'bookings', action: 'delete' }),
+    bookingController.deleteBooking
+  );
 
+Router.route('/users/:id').get(protection, bookingController.getBookingByUserId);
 module.exports = Router;

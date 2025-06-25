@@ -1,8 +1,9 @@
 const { Guard } = require('../models/User');
 const Booking = require('../models/Booking');
 const APIFeatures = require('../utils/apiFeatures');
+const AppError = require('../utils/appError');
 
-exports.getAllGuards = async (req, res) => {
+exports.getAllGuards = async (req, res, next) => {
   try {
     let guards;
     const { startDate, endDate } = req.query;
@@ -43,16 +44,20 @@ exports.getAllGuards = async (req, res) => {
   }
 };
 
-exports.UpdateGuardStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-  const guard = await Guard.findOneAndUpdate({ _id: id }, { status: status }, { new: true });
-  res.status(200).json({
-    status: 'success',
-    data: {
-      guard,
-    },
-  });
+exports.UpdateGuardStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const guard = await Guard.findOneAndUpdate({ _id: id }, { status: status }, { new: true });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        guard,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 exports.getGuard = async (req, res, next) => {
