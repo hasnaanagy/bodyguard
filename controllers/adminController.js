@@ -92,7 +92,7 @@ const mergePermissions = (existing, incoming) => {
   return result;
 };
 
-exports.assignPermissions = async (req, res) => {
+exports.assignPermissions = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { permissions } = req.body;

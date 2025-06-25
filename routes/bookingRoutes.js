@@ -7,7 +7,15 @@ const router = express.Router({ mergeParams: true });
 
 Router.route('/')
   .get(protection, bookingController.getAllBookings)
-  .post(protection, restriction('admin', 'moderator', 'client'), bookingController.BookGuard);
-Router.route('/:id').patch(protection, restriction('admin', 'moderator', 'client'), bookingController.updateBooking);
+  .post(
+    protection,
+    restriction(['admin', 'moderator', 'client'], { resource: 'bookings', action: 'write' }),
+    bookingController.BookGuard
+  );
+Router.route('/:id').patch(
+  protection,
+  restriction(['admin', 'moderator', 'client'], { resource: 'bookings', action: 'edit' }),
+  bookingController.updateBooking
+);
 
 module.exports = Router;
