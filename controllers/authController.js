@@ -1,25 +1,20 @@
 const { User, Guard, Admin, Client, Moderator } = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const AppError = require('../utils/appError');
 
 // Register User (with discriminator)
-exports.registerUser = async (req, res) => {
+exports.registerUser = async (req, res, next) => {
   try {
     const { role, password, email, phoneNumber, name, country, age, location } = req.body;
     // Check if email or phone already exists
     const emailExists = await User.findOne({ email });
     if (emailExists) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Email is already registered',
-      });
+      throw new AppError('Email is already registered', 400);
     }
     const phoneExists = await User.findOne({ phoneNumber });
     if (phoneExists) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Phone number is already registered',
-      });
+      throw new AppError('Phone number is already registered', 400);
     }
 
     // Hash password
@@ -56,19 +51,9 @@ exports.registerUser = async (req, res) => {
           criminalHistory: req.body.criminalHistory,
         });
         break;
-      case 'admin':
-        newUser = await Admin.create({ ...userData });
-        break;
-      case 'moderator':
-        newUser = await Moderator.create({ ...userData });
-        break;
       default:
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Invalid role specified.',
-        });
+        throw new AppError('Invalid role specified', 401);
     }
-
     // Remove sensitive data from response
     const userResponse = newUser.toObject();
     delete userResponse.password;
@@ -79,15 +64,12 @@ exports.registerUser = async (req, res) => {
       data: userResponse,
     });
   } catch (err) {
-    res.status(500).json({
-      status: 'fail',
-      message: err.message,
-    });
+    next(err);
   }
 };
 
 // Login User (with discriminator)
-exports.loginUser = async (req, res) => {
+exports.loginUser = async (req, res, next) => {
   try {
     const { emailOrPhone, password } = req.body;
 
@@ -99,19 +81,13 @@ exports.loginUser = async (req, res) => {
     const user = await User.findOne(searchQuery);
 
     if (!user) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'Invalid credentials',
-      });
+      throw new AppError('Invalid credentials', 401);
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({
-        status: 'fail',
-        message: 'Invalid credentials',
-      });
+      throw new AppError('Invalid credentials', 401);
     }
 
     // Generate JWT token
@@ -131,14 +107,11 @@ exports.loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({
-      status: 'fail',
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.getProfile = async (req, res) => {
+exports.getProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
@@ -159,18 +132,12 @@ exports.getProfile = async (req, res) => {
         Model = Moderator;
         break;
       default:
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Invalid role specified.',
-        });
+        throw new AppError('Invalid role specified', 401);
     }
 
     const user = await Model.findById(userId).select('-password');
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'User not found.',
-      });
+      throw new AppError('User not found.', 404);
     }
 
     res.status(200).json({
@@ -178,14 +145,11 @@ exports.getProfile = async (req, res) => {
       data: user,
     });
   } catch (err) {
-    res.status(500).json({
-      status: 'fail',
-      message: err.message,
-    });
+    next(err);
   }
 };
 
-exports.uploadProfileFiles = async (req, res) => {
+exports.uploadProfileFiles = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
@@ -205,7 +169,7 @@ exports.uploadProfileFiles = async (req, res) => {
         Model = Moderator;
         break;
       default:
-        return res.status(400).json({ status: 'fail', message: 'Invalid user role' });
+        throw new AppError('Invalid user role', 400);
     }
 
     // Prepare update object
@@ -218,28 +182,18 @@ exports.uploadProfileFiles = async (req, res) => {
         // For guards, optionally check if criminalHistory already exists
         const user = await Guard.findById(userId);
         if (!user.criminalHistory) {
-          return res.status(400).json({
-            status: 'fail',
-            message: 'You must have an existing criminalHistory before uploading a new one.',
-          });
+          throw new AppError('Invalid role You must have an existing criminalHistory before uploading a new one.', 400);
         }
         updateData.criminalHistory = req.files.pdf[0].googleDriveUrl;
       } else {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Only guards can upload criminal history PDF.',
-        });
+        throw new AppError('Only guards can upload criminal history PDF.', 400);
       }
     }
-
-    // if (!req.body || Object.keys(req.body).length === 0) {
-    //   return res.status(400).json({ status: 'fail', message: 'No data provided to update' });
-    // }
 
     const updatedUser = await Model.findByIdAndUpdate(userId, { $set: updateData }, { new: true, select: '-password' });
 
     if (!updatedUser) {
-      return res.status(404).json({ status: 'fail', message: 'User not found' });
+      throw new AppError('User not found.', 404);
     }
 
     res.status(200).json({
@@ -248,11 +202,11 @@ exports.uploadProfileFiles = async (req, res) => {
       data: updatedUser,
     });
   } catch (err) {
-    res.status(500).json({ status: 'fail', message: err.message });
+    next(err);
   }
 };
 
-exports.updateProfile = async (req, res) => {
+exports.updateProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const userRole = req.user.role;
@@ -268,7 +222,9 @@ exports.updateProfile = async (req, res) => {
     else if (userRole === 'admin') Model = Admin;
     else if (userRole === 'client') Model = Client;
     else if (userRole === 'moderator') Model = Moderator;
-    else return res.status(400).json({ status: 'fail', message: 'Invalid role' });
+    else {
+      throw new AppError('Invalid role specified', 401);
+    }
 
     // رفع الصور والملفات
     if (req.files?.profilePic?.[0]?.googleDriveUrl) {
@@ -279,10 +235,7 @@ exports.updateProfile = async (req, res) => {
       if (userRole === 'guard') {
         updates.criminalHistory = req.files.pdf[0].googleDriveUrl;
       } else {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Only guards can upload criminal history PDF.',
-        });
+        throw new AppError('Only guards can upload criminal history PDF.', 400);
       }
     }
 
@@ -290,25 +243,19 @@ exports.updateProfile = async (req, res) => {
     if (updates.location) {
       const loc = updates.location;
       if (!loc.type || loc.type !== 'Point' || !Array.isArray(loc.coordinates) || loc.coordinates.length !== 2) {
-        return res.status(400).json({ status: 'fail', message: 'Invalid location format' });
+        throw new AppError('Invalid location format.', 400);
       }
     }
 
     // ممنوع تعديل بيانات حساسة للحراس
     if (userRole === 'guard' && (updates.identificationNumber || updates.Certificates)) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Cannot update identification number or certificates directly',
-      });
+      throw new AppError('Cannot update identification number or certificates directly', 400);
     }
 
     // تحقق من وجود بيانات للتحديث
     const hasFile = req.files?.profilePic || req.files?.pdf;
     if (!Object.keys(updates).length && !hasFile) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'No data provided to update',
-      });
+      throw new AppError('No data provided to update', 400);
     }
 
     // تحديث المستخدم
@@ -323,7 +270,7 @@ exports.updateProfile = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ status: 'fail', message: 'User not found' });
+      throw new AppError('User not found.', 404);
     }
 
     res.status(200).json({
@@ -332,6 +279,6 @@ exports.updateProfile = async (req, res) => {
       data: { user: updatedUser },
     });
   } catch (err) {
-    res.status(500).json({ status: 'fail', message: err.message });
+    next(err);
   }
 };
