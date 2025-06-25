@@ -82,8 +82,24 @@ const guardSchema = new mongoose.Schema(
       default: 'Escort',
     },
     criminalHistory: String,
+    reasons: [
+      {
+        reason: {
+          type: String,
+          required: true,
+        },
+        desciption: {
+          type: String,
+          required: true,
+        },
+        addAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
-  options
+  { ...options, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // Admin-specific fields (example: role)

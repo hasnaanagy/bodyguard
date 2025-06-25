@@ -1,5 +1,5 @@
-const Router = require('express').Router();
 const express = require('express');
+const Router = require('express').Router({ mergeParams: true });
 const bookingController = require('../controllers/bookingController');
 const protection = require('../middlewares/protectionMiddleware');
 const restriction = require('../middlewares/restrictionMiddleware');

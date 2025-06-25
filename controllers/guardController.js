@@ -45,18 +45,27 @@ exports.getAllGuards = async (req, res, next) => {
 };
 
 exports.UpdateGuardStatus = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-    const guard = await Guard.findOneAndUpdate({ _id: id }, { status: status }, { new: true });
+  const { id } = req.params;
+  const { status, reason } = req.body;
+  if (status === 'rejected') {
+    if (!reason) {
+      return next(new AppError('Please provide a reason for rejection', 400));
+    }
+    const guard = await Guard.findOneAndUpdate({ _id: id }, { status, reason }, { new: true });
     res.status(200).json({
       status: 'success',
       data: {
         guard,
       },
     });
-  } catch (err) {
-    next(err);
+  } else {
+    const guard = await Guard.findOneAndUpdate({ _id: id }, { status }, { new: true });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        guard,
+      },
+    });
   }
 };
 
