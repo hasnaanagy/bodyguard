@@ -1,6 +1,7 @@
 const { Guard } = require('../models/User');
 const Booking = require('../models/bookingModel');
 const APIFeatures = require('../utils/apiFeatures');
+const AppError = require('../utils/appError');
 
 exports.getAllGuards = async (req, res) => {
   try {
@@ -54,16 +55,29 @@ exports.getAllPendingGuards = async (req, res) => {
   });
 };
 
-exports.UpdateGuardStatus = async (req, res) => {
+exports.UpdateGuardStatus = async (req, res, next) => {
   const { id } = req.params;
-  const { status } = req.body;
-  const guard = await Guard.findOneAndUpdate({ _id: id }, { status: status }, { new: true });
-  res.status(200).json({
-    status: 'success',
-    data: {
-      guard,
-    },
-  });
+  const { status, reason } = req.body;
+  if (status === 'rejected') {
+    if (!reason) {
+      return next(new AppError('Please provide a reason for rejection', 400));
+    }
+    const guard = await Guard.findOneAndUpdate({ _id: id }, { status, reason }, { new: true });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        guard,
+      },
+    });
+  } else {
+    const guard = await Guard.findOneAndUpdate({ _id: id }, { status }, { new: true });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        guard,
+      },
+    });
+  }
 };
 
 exports.getGuard = async (req, res, next) => {

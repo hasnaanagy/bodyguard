@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoute');
 const bookingRouter = require('./routes/bookingRoutes');
 const guardRouter = require('./routes/guardRoute');
 const reviewRouter = require('./routes/reviewRoute');
+const serviceRouter = require('./routes/serviceRoute');
 const morgan = require('morgan');
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/api/cars', carRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/guards', guardRouter);
 app.use('/api/reviews', reviewRouter);
+app.use('/api/services', serviceRouter);
 
 app.use((err, req, res, next) => {
   console.error('Error Stack:', err.stack);
